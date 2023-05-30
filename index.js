@@ -3,11 +3,10 @@ const app = express();
 const port = 5000;                  
 const fs = require('fs');
 const path = require('path');
-const Jimp = require('jimp');
+const Jimp = require('jimp-native'); //Or jimp. Jimp Native is much faster.
 const { promisify } = require('util');
 
 const readdir = promisify(fs.readdir);
-// const writeFile = promisify(fs.writeFile);
 
 async function blurImagesInFolder(folderReadPath, folderWritePath) {
   try {
@@ -30,19 +29,21 @@ async function blurImagesInFolder(folderReadPath, folderWritePath) {
         
       const imagePath = path.join(folderReadPath, imageFile);
       console.log("Blurring image")
+      console.time(imagePath)
       
       const image = await Jimp.read(imagePath);
       
       // Apply the blur effect
-      console.time(imagePath)
       await image.blur(30);           
-      console.timeEnd(imagePath)
+      
       // Save the blurred image with the same filename
       const blurredImagePath = path.join(folderWritePath, `blurred_${imageFile}`);
       await image.writeAsync(blurredImagePath);
-      
+      console.timeEnd(imagePath)
       console.log("Image blurred")
+      
       blurredImagePathArray.push(blurredImagePath)
+      
       return blurredImagePath;
     });
      // Wait for all promises to complete
@@ -69,5 +70,4 @@ app.get('/', async (req, res) => {
 
 app.listen(port, () => {            
     console.log(`Now listening on port ${port}`);
-    
 });
